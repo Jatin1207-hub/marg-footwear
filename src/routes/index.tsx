@@ -65,7 +65,7 @@ function Home() {
             </motion.span>
             <motion.h1
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7 }}
-              className="mt-3 text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tighter leading-[1] text-gradient-neon"
+              className="mt-3 text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tighter leading-tight pb-2 text-gradient-neon"
             >
               Marg Footwear
             </motion.h1>
@@ -213,7 +213,7 @@ function Home() {
 
       {/* Newsletter */}
       <section className="mx-auto max-w-4xl px-4 sm:px-6 py-10 md:py-16 pb-20 md:pb-24 text-center">
-        <h2 className="text-3xl md:text-5xl font-display font-bold">Join the Marg Footwear drop list.</h2>
+        <h2 className="text-3xl md:text-5xl font-display font-bold leading-tight pb-2">Join the Marg Footwear drop list.</h2>
         <p className="mt-3 text-muted-foreground">Early access to limited drops, exclusive colorways, and athlete stories.</p>
         <form onSubmit={(e) => e.preventDefault()} className="mt-7 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input type="email" placeholder="you@example.com" required className="flex-1 min-h-[48px] bg-surface border border-border rounded-full px-5 py-3 text-sm focus:outline-none focus:border-neon" />
@@ -227,8 +227,8 @@ function Home() {
 function SectionHeader({ eyebrow, title, inline = false }: { eyebrow: string; title: string; inline?: boolean }) {
   return (
     <div className={inline ? "" : "text-center"}>
-      <p className="text-xs tracking-[0.35em] text-neon">{eyebrow}</p>
-      <h2 className="mt-2 text-3xl md:text-5xl font-display font-bold tracking-tight">{title}</h2>
+      <p className="text-xs tracking-[0.35em] text-neon leading-normal pb-1">{eyebrow}</p>
+      <h2 className="mt-2 text-3xl md:text-5xl font-display font-bold tracking-tight leading-tight pb-2">{title}</h2>
     </div>
   );
 }
