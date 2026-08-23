@@ -36,7 +36,7 @@ export function Logo({
 }) {
   // Height scales for different navbar/footer placements
   // h-8 = 32px, h-10 = 40px
-  const heightClass = size === "lg" ? "h-12 md:h-14" : size === "sm" ? "h-6 md:h-8" : "h-8 md:h-10";
+  const heightClass = size === "lg" ? "h-16 md:h-20" : size === "sm" ? "h-6 md:h-8" : "h-8 md:h-10";
 
   return (
     <Link to="/" className="flex items-center gap-2 group hover:opacity-90 transition-opacity">
