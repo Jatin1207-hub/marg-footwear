@@ -9,9 +9,9 @@ import { ArrowRight, Truck, Shield, Recycle, Sparkles } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Marg — Step Into Power" },
+      { title: "Marg Footwear — Step Into Power" },
       { name: "description", content: "Premium footwear with a fully interactive 3D shopping experience." },
-      { property: "og:title", content: "Marg — Step Into Power" },
+      { property: "og:title", content: "Marg Footwear — Step Into Power" },
       { property: "og:description", content: "Premium footwear with a fully interactive 3D shopping experience." },
     ],
   }),
@@ -65,9 +65,9 @@ function Home() {
             </motion.span>
             <motion.h1
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7 }}
-              className="mt-3 text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.9] text-gradient-neon"
+              className="mt-3 text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tighter leading-[1] text-gradient-neon"
             >
-              MARG
+              Marg Footwear
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
@@ -148,7 +148,7 @@ function Home() {
         {/* Section Ambient Glow */}
         <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[800px] h-[600px] -z-10 rounded-full pointer-events-none opacity-50" style={{ background: "radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 60%)", filter: "blur(100px)" }} />
         
-        <SectionHeader eyebrow="WHY MARG" title="Crafted without compromise." />
+        <SectionHeader eyebrow="WHY MARG FOOTWEAR" title="Crafted without compromise." />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8 md:mt-10">
           {[
             { icon: Sparkles, t: "Carbon-Plated Speed", d: "Race-day performance in every silhouette." },
@@ -188,7 +188,7 @@ function Home() {
         <div className="absolute inset-0 pointer-events-none -z-10" style={{ background: "radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%)" }} />
         
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 md:py-24">
-          <SectionHeader eyebrow="FROM THE COMMUNITY" title="Athletes choose Marg." />
+          <SectionHeader eyebrow="FROM THE COMMUNITY" title="Athletes choose Marg Footwear." />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8 md:mt-10">
           {[
             { q: "The Velocity X cut my marathon PB by four minutes. Insane energy return.", a: "— Aarav K., Mumbai" },
@@ -213,7 +213,7 @@ function Home() {
 
       {/* Newsletter */}
       <section className="mx-auto max-w-4xl px-4 sm:px-6 py-10 md:py-16 pb-20 md:pb-24 text-center">
-        <h2 className="text-3xl md:text-5xl font-display font-bold">Join the Marg drop list.</h2>
+        <h2 className="text-3xl md:text-5xl font-display font-bold">Join the Marg Footwear drop list.</h2>
         <p className="mt-3 text-muted-foreground">Early access to limited drops, exclusive colorways, and athlete stories.</p>
         <form onSubmit={(e) => e.preventDefault()} className="mt-7 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input type="email" placeholder="you@example.com" required className="flex-1 min-h-[48px] bg-surface border border-border rounded-full px-5 py-3 text-sm focus:outline-none focus:border-neon" />
