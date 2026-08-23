@@ -67,7 +67,7 @@ export function Navbar() {
 
   return (
     <header 
-      className="fixed top-4 left-4 right-4 max-w-7xl mx-auto rounded-full z-50 bg-black/50 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-6 py-3 border border-white/10 transition-all duration-300 ease-out"
+      className="fixed top-4 left-4 right-4 max-w-7xl mx-auto rounded-full z-50 bg-black/50 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-6 py-2 border border-white/10 transition-all duration-300 ease-out"
     >
       <div className="flex items-center justify-between">
         <Logo glow size="lg" />
