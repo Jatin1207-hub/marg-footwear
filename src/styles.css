@@ -37,6 +37,33 @@
 
 :root {
   --radius: 0.75rem;
+  /* Light theme — clean white/gray with electric orange neon */
+  --background: oklch(0.98 0 0);
+  --foreground: oklch(0.14 0.01 250);
+  --surface: oklch(0.95 0 0);
+  --card: oklch(0.98 0 0);
+  --card-foreground: oklch(0.14 0.01 250);
+  --popover: oklch(0.98 0 0);
+  --popover-foreground: oklch(0.14 0.01 250);
+  --primary: oklch(0.14 0.01 250);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.9 0 0);
+  --secondary-foreground: oklch(0.14 0.01 250);
+  --muted: oklch(0.92 0 0);
+  --muted-foreground: oklch(0.3 0 0);
+  --accent: oklch(0.72 0.21 45);
+  --accent-foreground: oklch(0.98 0 0);
+  --neon: oklch(0.65 0.22 45);
+  --neon-foreground: oklch(0.14 0.01 250);
+  --destructive: oklch(0.62 0.24 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 12%);
+  --ring: oklch(0.75 0.22 45);
+}
+
+.dark {
+  color-scheme: dark;
   /* Premium dark theme — charcoal with electric orange neon */
   --background: oklch(0.14 0.01 250);
   --foreground: oklch(0.98 0 0);
@@ -61,8 +88,6 @@
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.75 0.22 45);
 }
-
-.dark { color-scheme: dark; }
 
 @layer base {
   *, *::before, *::after {
@@ -94,7 +119,7 @@
 }
 
 @utility text-gradient-neon {
-  background: linear-gradient(135deg, oklch(0.98 0 0), var(--neon));
+  background: linear-gradient(135deg, var(--color-foreground), var(--color-neon));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

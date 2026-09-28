@@ -11,9 +11,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "../lib/supabaseClient";
-
-// Temporary test to verify Supabase initializes correctly
-console.log("Supabase Client initialized:", supabase);
+import { ThemeProvider } from "../components/ThemeProvider";
 
 function NotFoundComponent() {
   return (
@@ -77,11 +75,10 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head><HeadContent /></head>
-      <body className="antialiased min-h-screen text-foreground selection:bg-neon selection:text-black">
+      <body className="antialiased min-h-screen text-foreground selection:bg-neon selection:text-black transition-colors duration-300">
         {/* Global Base Gradient */}
         <div 
-          className="fixed inset-0 -z-50 pointer-events-none"
-          style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #000000 50%, #0a0a0a 100%)" }}
+          className="fixed inset-0 -z-50 pointer-events-none bg-gradient-to-b from-background via-background/95 to-background transition-colors duration-300"
         />
         {/* Global Noise Overlay */}
         <div 
@@ -101,8 +98,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Preloader />
-      <Outlet />
+      <ThemeProvider defaultTheme="dark" storageKey="marg-theme">
+        <Preloader />
+        <Outlet />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

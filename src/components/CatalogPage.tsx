@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { products, type Product, type Category } from "@/lib/products";
 import { ProductCard } from "./ProductCard";
 import { motion } from "framer-motion";
@@ -28,6 +28,11 @@ export function CatalogPage({
   const [activeColors, setActiveColors] = useState<Set<string>>(new Set());
   const [activeSizes, setActiveSizes] = useState<Set<number>>(new Set());
   const [priceMax, setPriceMax] = useState(maxPrice);
+  
+  useEffect(() => {
+    setPriceMax(maxPrice);
+  }, [maxPrice]);
+
   const [sort, setSort] = useState<SortKey>("newest");
   const [q, setQ] = useState("");
 

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouter } from "@tanstack/react-router";
 import { useAuthStore } from "../lib/auth-store";
-import { User, Package, Heart, MapPin, CreditCard, Settings, LogOut } from "lucide-react";
+import { User, Package, Heart, MapPin, CreditCard, Settings, LogOut, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -19,22 +19,28 @@ const NAV_LINKS = [
 
 function ProfileLayout() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, isLoaded, logout } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isLoaded && !isAuthenticated) {
       router.navigate({ to: "/login" });
     }
-  }, [isAuthenticated, router]);
+  }, [isLoaded, isAuthenticated, router]);
 
-  if (!user) return null;
+  if (!isLoaded || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-neon" />
+      </div>
+    );
+  }
 
   const initials = user.name.substring(0, 2).toUpperCase();
   const memberSinceYear = new Date(user.memberSince).getFullYear();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm("Are you sure you want to log out?")) {
-      logout();
+      await logout();
       toast.success("Logged out successfully");
       router.navigate({ to: "/login" });
     }

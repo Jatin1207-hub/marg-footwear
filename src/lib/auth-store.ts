@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { supabase } from './supabaseClient';
 
 export interface Address {
   id: string;
@@ -60,7 +60,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
-  password?: string; // Stored locally for mock purposes only
+  password?: string;
   memberSince: string;
   preferences: UserPreferences;
   addresses: Address[];
@@ -72,38 +72,38 @@ export interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (user: Partial<User>) => void;
-  signup: (user: Partial<User>) => void;
-  logout: () => void;
+  isLoaded: boolean;
+  
+  login: (credentials: { email: string; password: string }) => Promise<{ error: Error | null }>;
+  signup: (credentials: { name: string; email: string; password: string; phone?: string }) => Promise<{ data: any; error: Error | null }>;
+  logout: () => Promise<void>;
   deleteAccount: () => void;
   
   updateProfile: (data: Partial<User>) => void;
   updatePreferences: (prefs: Partial<UserPreferences>) => void;
   updatePassword: (newPassword: string) => void;
   
-  // Addresses
   addAddress: (address: Omit<Address, 'id'>) => void;
   removeAddress: (id: string) => void;
   setDefaultAddress: (id: string) => void;
   
-  // Wishlist
   toggleWishlist: (item: WishlistItem) => void;
   
-  // Payment Methods
   addPaymentMethod: (pm: Omit<PaymentMethod, 'id'>) => void;
   removePaymentMethod: (id: string) => void;
   setDefaultPaymentMethod: (id: string) => void;
 }
 
-const getDefaultUserObj = (user: Partial<User>): User => {
+const buildUserObj = (session: any): User => {
+  const meta = session.user.user_metadata || {};
+  const email = session.user.email || "";
   return {
-    id: user.id || "usr_" + Math.random().toString(36).substr(2, 9),
-    name: user.name || "Guest",
-    email: user.email || "",
-    phone: user.phone || "",
-    password: user.password || "",
-    memberSince: user.memberSince || new Date().toISOString(),
-    preferences: user.preferences || {
+    id: session.user.id,
+    name: meta.name || email.split("@")[0],
+    email: email,
+    phone: meta.phone || "",
+    memberSince: session.user.created_at,
+    preferences: {
       preferredCategory: null,
       shoeSize: null,
       genderPreference: null,
@@ -114,120 +114,129 @@ const getDefaultUserObj = (user: Partial<User>): User => {
         smsAlerts: false
       },
     },
-    addresses: user.addresses || [],
-    orders: user.orders || [
-      {
-        id: "ORD-98234",
-        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-        status: "Delivered",
-        total: 245.00,
-        items: [{ id: "i1", productId: "p1", name: "Marg Alpha Runner", price: 245, quantity: 1, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=300" }]
-      },
-      {
-        id: "ORD-99102",
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        status: "Processing",
-        total: 180.00,
-        items: [{ id: "i2", productId: "p2", name: "Marg Velocity Pro", price: 180, quantity: 1, image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=300" }]
-      }
-    ], // seed with mock orders
-    wishlist: user.wishlist || [],
-    paymentMethods: user.paymentMethods || [
-      { id: "pm1", type: "card", label: "•••• 4532", isDefault: true }
-    ], // seed with mock payment
+    addresses: [],
+    orders: [],
+    wishlist: [],
+    paymentMethods: [],
   };
 };
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
-      
-      login: (userData) => set({ user: getDefaultUserObj(userData), isAuthenticated: true }),
-      signup: (userData) => set({ user: getDefaultUserObj(userData), isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
-      deleteAccount: () => set({ user: null, isAuthenticated: false }),
-      
-      updateProfile: (data) => set((state) => ({
-        user: state.user ? { ...state.user, ...data } : null
-      })),
-      
-      updatePreferences: (prefs) => set((state) => ({
-        user: state.user 
-          ? { ...state.user, preferences: { ...state.user.preferences, ...prefs } } 
-          : null
-      })),
+export const useAuthStore = create<AuthState>((set, get) => {
+  if (typeof window !== 'undefined') {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      set({
+        user: session ? buildUserObj(session) : null,
+        isAuthenticated: !!session,
+        isLoaded: true
+      });
+    });
 
-      updatePassword: (newPassword) => set((state) => ({
-        user: state.user ? { ...state.user, password: newPassword } : null
-      })),
-      
-      addAddress: (address) => set((state) => {
-        if (!state.user) return state;
-        const newAddress = { ...address, id: "add_" + Math.random().toString(36).substr(2, 9) };
-        const addresses = [...state.user.addresses];
-        if (addresses.length === 0 || newAddress.isDefault) {
-          newAddress.isDefault = true;
-          addresses.forEach(a => a.isDefault = false);
-        }
-        return { user: { ...state.user, addresses: [...addresses, newAddress] } };
-      }),
-      
-      removeAddress: (id) => set((state) => {
-        if (!state.user) return state;
-        return { user: { ...state.user, addresses: state.user.addresses.filter(a => a.id !== id) } };
-      }),
-      
-      setDefaultAddress: (id) => set((state) => {
-        if (!state.user) return state;
-        return {
-          user: {
-            ...state.user,
-            addresses: state.user.addresses.map(a => ({ ...a, isDefault: a.id === id }))
-          }
-        };
-      }),
-      
-      toggleWishlist: (item) => set((state) => {
-        if (!state.user) return state;
-        const exists = state.user.wishlist.some(w => w.productId === item.productId);
-        if (exists) {
-          return { user: { ...state.user, wishlist: state.user.wishlist.filter(w => w.productId !== item.productId) } };
-        } else {
-          return { user: { ...state.user, wishlist: [...state.user.wishlist, item] } };
-        }
-      }),
-      
-      addPaymentMethod: (pm) => set((state) => {
-        if (!state.user) return state;
-        const newPm = { ...pm, id: "pm_" + Math.random().toString(36).substr(2, 9) };
-        const methods = [...state.user.paymentMethods];
-        if (methods.length === 0 || newPm.isDefault) {
-          newPm.isDefault = true;
-          methods.forEach(m => m.isDefault = false);
-        }
-        return { user: { ...state.user, paymentMethods: [...methods, newPm] } };
-      }),
-      
-      removePaymentMethod: (id) => set((state) => {
-        if (!state.user) return state;
-        return { user: { ...state.user, paymentMethods: state.user.paymentMethods.filter(m => m.id !== id) } };
-      }),
-      
-      setDefaultPaymentMethod: (id) => set((state) => {
-        if (!state.user) return state;
-        return {
-          user: {
-            ...state.user,
-            paymentMethods: state.user.paymentMethods.map(m => ({ ...m, isDefault: m.id === id }))
-          }
-        };
-      })
+    supabase.auth.onAuthStateChange((_event, session) => {
+      set({
+        user: session ? buildUserObj(session) : null,
+        isAuthenticated: !!session,
+      });
+    });
+  }
 
+  return {
+    user: null,
+    isAuthenticated: false,
+    isLoaded: false,
+    
+    login: async ({ email, password }) => {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    },
+    signup: async ({ name, email, password, phone }) => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name, phone }
+        }
+      });
+      return { data, error };
+    },
+    logout: async () => {
+      await supabase.auth.signOut();
+    },
+    deleteAccount: () => set({ user: null, isAuthenticated: false }),
+    
+    updateProfile: (data) => set((state) => ({
+      user: state.user ? { ...state.user, ...data } : null
+    })),
+    
+    updatePreferences: (prefs) => set((state) => ({
+      user: state.user 
+        ? { ...state.user, preferences: { ...state.user.preferences, ...prefs } } 
+        : null
+    })),
+
+    updatePassword: (newPassword) => set((state) => ({
+      user: state.user ? { ...state.user, password: newPassword } : null
+    })),
+    
+    addAddress: (address) => set((state) => {
+      if (!state.user) return state;
+      const newAddress = { ...address, id: "add_" + Math.random().toString(36).substr(2, 9) };
+      const addresses = [...state.user.addresses];
+      if (addresses.length === 0 || newAddress.isDefault) {
+        newAddress.isDefault = true;
+        addresses.forEach(a => a.isDefault = false);
+      }
+      return { user: { ...state.user, addresses: [...addresses, newAddress] } };
     }),
-    {
-      name: 'marg-auth-storage', // key in local storage
-    }
-  )
-);
+    
+    removeAddress: (id) => set((state) => {
+      if (!state.user) return state;
+      return { user: { ...state.user, addresses: state.user.addresses.filter(a => a.id !== id) } };
+    }),
+    
+    setDefaultAddress: (id) => set((state) => {
+      if (!state.user) return state;
+      return {
+        user: {
+          ...state.user,
+          addresses: state.user.addresses.map(a => ({ ...a, isDefault: a.id === id }))
+        }
+      };
+    }),
+    
+    toggleWishlist: (item) => set((state) => {
+      if (!state.user) return state;
+      const exists = state.user.wishlist.some(w => w.productId === item.productId);
+      if (exists) {
+        return { user: { ...state.user, wishlist: state.user.wishlist.filter(w => w.productId !== item.productId) } };
+      } else {
+        return { user: { ...state.user, wishlist: [...state.user.wishlist, item] } };
+      }
+    }),
+    
+    addPaymentMethod: (pm) => set((state) => {
+      if (!state.user) return state;
+      const newPm = { ...pm, id: "pm_" + Math.random().toString(36).substr(2, 9) };
+      const methods = [...state.user.paymentMethods];
+      if (methods.length === 0 || newPm.isDefault) {
+        newPm.isDefault = true;
+        methods.forEach(m => m.isDefault = false);
+      }
+      return { user: { ...state.user, paymentMethods: [...methods, newPm] } };
+    }),
+    
+    removePaymentMethod: (id) => set((state) => {
+      if (!state.user) return state;
+      return { user: { ...state.user, paymentMethods: state.user.paymentMethods.filter(m => m.id !== id) } };
+    }),
+    
+    setDefaultPaymentMethod: (id) => set((state) => {
+      if (!state.user) return state;
+      return {
+        user: {
+          ...state.user,
+          paymentMethods: state.user.paymentMethods.map(m => ({ ...m, isDefault: m.id === id }))
+        }
+      };
+    })
+  };
+});

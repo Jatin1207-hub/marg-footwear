@@ -46,16 +46,26 @@ function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
     
-    signup({
+    const { data: signUpData, error } = await signup({
       name: data.name,
       email: data.email,
       phone: data.phone,
       password: data.password,
     });
 
-    toast.success("Account created successfully");
+    if (error) {
+      toast.error(error.message || "Failed to create account");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (signUpData?.session === null) {
+      toast.success("Account created. Please check your email to confirm your account.");
+    } else {
+      toast.success("Account created successfully!");
+    }
+    
     setIsSubmitting(false);
     router.navigate({ to: "/" });
   };

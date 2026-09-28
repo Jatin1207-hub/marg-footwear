@@ -29,9 +29,9 @@ function About() {
 
       <section className="mx-auto max-w-5xl px-6 py-12">
         <div className="grid sm:grid-cols-3 gap-6">
-          <Counter to={2026} label="Founded" />
-          <Counter to={47} label="Pro athletes" suffix="+" />
-          <Counter to={120000} label="Pairs shipped" suffix="+" />
+          <Counter to={0} label="Founded" />
+          <Counter to={0} label="Pro athletes" />
+          <Counter to={0} label="Pairs shipped" />
         </div>
       </section>
 
@@ -56,7 +56,10 @@ function Counter({ to, suffix = "", label }: { to: number; suffix?: string; labe
   const inView = useInView(ref, { once: true });
   const [n, setN] = useState(0);
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || to === 0) {
+      setN(to);
+      return;
+    }
     const start = performance.now();
     const dur = 1400;
     const tick = (t: number) => {
@@ -68,7 +71,7 @@ function Counter({ to, suffix = "", label }: { to: number; suffix?: string; labe
   }, [inView, to]);
   return (
     <div ref={ref} className="text-center border border-border rounded-2xl p-8">
-      <div className="text-5xl font-display font-bold text-neon">{n.toLocaleString()}{suffix}</div>
+      <div className="text-5xl font-display font-bold text-neon">{n}{suffix}</div>
       <div className="mt-2 text-xs tracking-[0.3em] text-muted-foreground">{label.toUpperCase()}</div>
     </div>
   );

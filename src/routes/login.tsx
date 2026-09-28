@@ -36,14 +36,23 @@ function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
     
-    login({
-      id: "usr_" + Math.random().toString(36).substr(2, 9),
-      name: data.email.split("@")[0],
+    const { error } = await login({
       email: data.email,
       password: data.password,
     });
+
+    if (error) {
+      let errorMsg = error.message;
+      if (errorMsg.includes("Email not confirmed")) {
+        errorMsg = "Please confirm your email address before logging in.";
+      } else if (errorMsg.includes("Invalid login credentials")) {
+        errorMsg = "Invalid email or password. Please try again.";
+      }
+      toast.error(errorMsg || "Failed to log in");
+      setIsSubmitting(false);
+      return;
+    }
 
     toast.success("Logged in successfully");
     setIsSubmitting(false);

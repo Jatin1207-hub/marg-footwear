@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { Logo } from "./Logo";
 import { useCart, selectCount } from "@/lib/cart-store";
 import { useAuthStore } from "@/lib/auth-store";
+import { useWishlist } from "@/lib/wishlist-store";
 import { supabase } from "@/lib/supabaseClient";
-import { ShoppingBag, Search, Menu, X, User, Heart } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User, Heart, Sun, Moon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTheme } from "./ThemeProvider";
 
 const links = [
   { to: "/", label: "Home" },
@@ -24,21 +26,29 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const matchRoute = useMatchRoute();
-  const wishlistCount = 0; // Temporary placeholder state for wishlist
+  const wishlistCount = useWishlist((s) => s.wishlistIds.length);
+  const loadWishlist = useWishlist((s) => s.load);
+  const { theme, setTheme } = useTheme();
 
   const [sessionUser, setSessionUser] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSessionUser(session?.user ?? null);
+      if (session?.user?.id) loadWishlist(session.user.id);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSessionUser(session?.user ?? null);
+      if (session?.user?.id) {
+        loadWishlist(session.user.id);
+      } else {
+        useWishlist.getState().load(""); // clear
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadWishlist]);
 
   const getInitial = () => {
     if (sessionUser) {
@@ -67,7 +77,7 @@ export function Navbar() {
 
   return (
     <header 
-      className="fixed top-4 left-4 right-4 max-w-7xl mx-auto rounded-full z-50 bg-black/50 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-6 py-2 border border-white/10 transition-all duration-300 ease-out"
+      className="fixed top-4 left-4 right-4 max-w-7xl mx-auto rounded-full z-50 bg-background/80 dark:bg-black/50 backdrop-blur-xl shadow-lg dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-6 py-2 border border-border transition-all duration-300 ease-out"
     >
       <div className="flex items-center justify-between">
         <Logo glow size="lg" />
@@ -84,7 +94,7 @@ export function Navbar() {
                   }
                 }}
               >
-                <span className={`text-sm tracking-wide block transition-all duration-300 ${isActive ? "bg-orange-500 text-black rounded-full px-4 py-1.5 font-medium shadow-[0_0_12px_rgba(249,115,22,0.5)]" : "px-4 py-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-white"}`}>
+                <span className={`text-sm tracking-wide block transition-all duration-300 ${isActive ? "bg-orange-500 text-black rounded-full px-4 py-1.5 font-medium shadow-[0_0_12px_rgba(249,115,22,0.5)]" : "px-4 py-1.5 rounded-full text-gray-400 hover:bg-black/10 dark:hover:bg-white/10 hover:text-white"}`}>
                   {l.label}
                 </span>
               </Link>
@@ -95,14 +105,14 @@ export function Navbar() {
           <button
             aria-label="Search"
             onClick={() => setSearchOpen((s) => !s)}
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 ${searchOpen ? 'bg-neon text-neon-foreground shadow-[0_4px_12px_rgba(255,106,0,0.3)]' : 'text-muted-foreground hover:bg-white/10 hover:text-foreground'}`}
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 ${searchOpen ? 'bg-neon text-neon-foreground shadow-[0_4px_12px_rgba(255,106,0,0.3)]' : 'text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground'}`}
           >
             <Search className="h-4 w-4" />
           </button>
           <Link
             to="/wishlist"
             aria-label="Wishlist"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
             activeProps={{ className: "!bg-neon !text-neon-foreground shadow-[0_4px_12px_rgba(255,106,0,0.3)]" }}
           >
             <Heart className="h-4 w-4" />
@@ -115,7 +125,7 @@ export function Navbar() {
           <button
             aria-label="Cart"
             onClick={openCart}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
           >
             <ShoppingBag className="h-4 w-4" />
             {count > 0 && (
@@ -124,10 +134,17 @@ export function Navbar() {
               </span>
             )}
           </button>
+          <button
+            aria-label="Toggle theme"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           <Link
             to={sessionUser || isAuthenticated ? "/profile" : "/login"}
             aria-label="Profile"
-            className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
             activeProps={{ className: "!bg-neon !text-neon-foreground shadow-[0_4px_12px_rgba(255,106,0,0.3)]" }}
           >
             {(sessionUser || isAuthenticated) ? (
@@ -141,7 +158,7 @@ export function Navbar() {
           <button
             aria-label="Menu"
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-white/10 hover:text-foreground ml-1"
+            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground ml-1"
           >
             <Menu className="h-4 w-4" />
           </button>
@@ -154,7 +171,7 @@ export function Navbar() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-white/10 bg-black/40 backdrop-blur-md rounded-b-3xl -mt-6 pt-6"
+            className="overflow-hidden border-t border-border bg-background/90 dark:bg-black/40 backdrop-blur-md rounded-b-3xl -mt-6 pt-6"
           >
             <SearchBar onClose={() => setSearchOpen(false)} />
           </motion.div>
@@ -168,9 +185,9 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed inset-0 w-full h-[100dvh] bg-[#0a0a0a] z-[9999] p-6 flex flex-col overflow-y-auto"
+            className="fixed inset-0 w-full h-[100dvh] bg-background z-[9999] p-6 flex flex-col overflow-y-auto"
           >
-            <div className="flex items-center justify-between pb-5 border-b border-white/10">
+            <div className="flex items-center justify-between pb-5 border-b border-border">
               <Logo size="sm" />
               <button
                 onClick={() => setMobileOpen(false)}
@@ -190,7 +207,7 @@ export function Navbar() {
                     initial={{ opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 + 0.1, ease: "easeOut" }}
-                    className="border-b border-white/5 last:border-0"
+                    className="border-b border-border/50 last:border-0"
                   >
                     <Link
                       to={l.to}
@@ -234,7 +251,7 @@ export function Navbar() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.4 }}
-              className="mt-6 pt-6 border-t border-white/10 mb-4"
+              className="mt-6 pt-6 border-t border-border mb-4"
             >
               <Link
                 to="/new-arrivals"

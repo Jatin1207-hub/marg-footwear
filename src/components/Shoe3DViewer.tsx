@@ -15,21 +15,25 @@ import { useIsMobile } from "../hooks/use-mobile";
 // ---------------------------------------------------------------------------
 // Single shared GLTF model path
 // ---------------------------------------------------------------------------
-const SNEAKER_MODEL_URL = "/models/sneaker/scene.gltf";
+import { FALLBACK_SHOE_MODEL } from "../lib/shoeModels";
 
-// Preload so the model is cached immediately when this chunk loads
-useGLTF.preload(SNEAKER_MODEL_URL);
+// Preload the fallback
+useGLTF.preload(FALLBACK_SHOE_MODEL);
 
 function SneakerModel({
   color,
   autoRotate,
   isResetting,
+  modelUrl = FALLBACK_SHOE_MODEL,
+  variant,
 }: {
   color: string;
   autoRotate: boolean;
   isResetting?: boolean;
+  modelUrl?: string;
+  variant?: { tint: string | null; rotateY: number; name?: string };
 }) {
-  const { scene } = useGLTF(SNEAKER_MODEL_URL);
+  const { scene } = useGLTF(modelUrl);
   const group = useRef<THREE.Group>(null!);
 
   const clonedScene = useMemo(() => {
@@ -54,10 +58,19 @@ function SneakerModel({
   useEffect(() => {
     if (isResetting && group.current) {
       startRot.current = group.current.rotation.y;
-      targetRot.current = Math.round(startRot.current / (Math.PI * 2)) * (Math.PI * 2);
+      const base = variant?.rotateY || 0;
+      const revs = Math.round((startRot.current - base) / (Math.PI * 2));
+      targetRot.current = revs * (Math.PI * 2) + base;
       progress.current = 0;
     }
-  }, [isResetting]);
+  }, [isResetting, variant]);
+
+  // Apply initial rotation from variant
+  useEffect(() => {
+    if (group.current) {
+      group.current.rotation.y = variant?.rotateY || 0;
+    }
+  }, [variant]);
 
   useFrame((_, dt) => {
     if (isResetting && group.current) {
@@ -99,20 +112,34 @@ function SneakerModel({
   }, [clonedScene]);
 
   useEffect(() => {
-    const tint = new THREE.Color(color);
+    const baseColor = new THREE.Color(color);
+    const varTint = variant?.tint ? new THREE.Color(variant.tint) : null;
+
     clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         mats.forEach((m) => {
           if (m instanceof THREE.MeshStandardMaterial) {
-            m.color.set(tint);
+            const hsl = { h: 0, s: 0, l: 0 };
+            baseColor.getHSL(hsl);
+            
+            if (variant?.name === "mono") {
+              hsl.s = 0; // Grayscale
+            }
+            
+            const targetColor = new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l);
+            if (varTint) {
+               targetColor.multiply(varTint);
+            }
+            
+            m.color.set(targetColor);
             m.needsUpdate = true;
           }
         });
       }
     });
-  }, [clonedScene, color]);
+  }, [clonedScene, color, variant]);
 
   return (
     <group ref={group} position={fitTransform.offset} scale={fitTransform.scale}>
@@ -199,12 +226,16 @@ export default function Shoe3DViewer({
   showAutoRotateToggle = false,
   inView = true,
   enableZoom = true,
+  modelUrl,
+  variant,
 }: {
   color?: string;
   interactive?: boolean;
   showAutoRotateToggle?: boolean;
   inView?: boolean;
   enableZoom?: boolean;
+  modelUrl?: string;
+  variant?: { tint: string | null; rotateY: number; name?: string };
 }) {
   const [auto, setAuto] = useState(!showAutoRotateToggle);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -286,7 +317,7 @@ export default function Shoe3DViewer({
         <spotLight position={[0, 8, 0]} angle={0.4} penumbra={0.8} intensity={0.5} color="#ffffff" />
 
         <Suspense fallback={<Loader />}>
-          <SneakerModel color={color} autoRotate={effectiveAutoRotate} isResetting={isResetting} />
+          <SneakerModel color={color} autoRotate={effectiveAutoRotate} isResetting={isResetting} modelUrl={modelUrl} variant={variant} />
           <ContactShadows
             position={[0, -0.55, 0]}
             opacity={0.7}

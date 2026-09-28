@@ -117,7 +117,7 @@ function Home() {
       </section>
 
       {/* Trending Now */}
-      <section className="bg-white/[0.02] border-y border-white/[0.02]">
+      <section className="bg-foreground/[0.02] border-y border-border/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 md:py-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4">
           <SectionHeader eyebrow="HOT RIGHT NOW" title="Trending Now" inline />
@@ -181,7 +181,7 @@ function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="relative bg-white/[0.02] border-y border-white/[0.02] overflow-hidden">
+      <section className="relative bg-foreground/[0.02] border-y border-border/50 overflow-hidden">
         {/* Section Ambient Glow */}
         <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[800px] h-[800px] -z-10 rounded-full pointer-events-none opacity-40" style={{ background: "radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 60%)", filter: "blur(100px)" }} />
         {/* Vignette for Testimonials */}
